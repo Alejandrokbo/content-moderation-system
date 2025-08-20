@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Moderation System</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2563eb;
+            text-align: center;
+        }
+        .endpoints {
+            margin-top: 30px;
+        }
+        .endpoint {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border-left: 4px solid #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛡️ Content Moderation System</h1>
+        <p>Sistema de moderación de contenido desarrollado con Quarkus.</p>
+        
+        <div class="endpoints">
+            <h3>Endpoints disponibles:</h3>
+            
+            <div class="endpoint">
+                <strong>GET</strong> <code>/dev/translate</code><br>
+                <small>Servicio de traducción de desarrollo</small>
+            </div>
+            
+            <div class="endpoint">
+                <strong>GET</strong> <code>/dev/score</code><br>
+                <small>Servicio de puntuación de desarrollo</small>
+            </div>
+            
+            <div class="endpoint">
+                <strong>GET</strong> <code>/q/health</code><br>
+                <small>Health check de la aplicación</small>
+            </div>
+            
+            <div class="endpoint">
+                <strong>GET</strong> <code>/q/metrics</code><br>
+                <small>Métricas de Prometheus</small>
+            </div>
+            
+            <div class="endpoint">
+                <strong>GET</strong> <code>/api/metrics/simple</code><br>
+                <small>Métricas básicas del sistema (JSON)</small>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

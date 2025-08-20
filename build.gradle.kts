@@ -1,6 +1,6 @@
 plugins {
     java
-    id("io.quarkus")
+    id("io.quarkus") version "3.15.5"
 }
 
 repositories {
@@ -14,20 +14,36 @@ val quarkusPlatformVersion: String by project
 
 dependencies {
     implementation(enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}"))
-    implementation(enforcedPlatform("${quarkusPlatformGroupId}:quarkus-camel-bom:${quarkusPlatformVersion}"))
+
+    // REST Reactive (server) + JSON
     implementation("io.quarkus:quarkus-rest")
-    implementation("io.quarkus:quarkus-rest-client-jackson")
-    implementation("io.quarkus:quarkus-rest-client")
-    implementation("io.quarkus:quarkus-picocli")
     implementation("io.quarkus:quarkus-rest-jackson")
+
+    // REST Client Reactive (+ Jackson)
+    implementation("io.quarkus:quarkus-rest-client-reactive")
+    implementation("io.quarkus:quarkus-rest-client-reactive-jackson")
+
+    // Resilience y CLI
     implementation("io.quarkus:quarkus-smallrye-fault-tolerance")
-    implementation("org.apache.camel.quarkus:camel-quarkus-caffeine")
-    implementation("io.quarkus:quarkus-resteasy")
-    implementation("io.quarkus:quarkus-resteasy-jackson")
-    implementation("io.quarkus:quarkus-smallrye-metrics")
-    implementation("io.quarkus:quarkus-arc")
+    // implementation("io.quarkus:quarkus-picocli") // Removed - using REST API instead
+
+    // Cache
+    implementation("io.quarkus:quarkus-caffeine")
+
+    // CSV parser
+    implementation("com.univocity:univocity-parsers:2.9.1")
+
+    // Health check
+    implementation("io.quarkus:quarkus-smallrye-health")
+    
+    // Metrics
+    implementation("io.quarkus:quarkus-micrometer")
+    implementation("io.quarkus:quarkus-micrometer-registry-prometheus")
+
+    // Test
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.rest-assured:rest-assured")
+    testImplementation("org.wiremock:wiremock-standalone:3.9.1")
 }
 
 group = "org.ravenpack"

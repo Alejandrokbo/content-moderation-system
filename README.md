@@ -1,99 +1,164 @@
-# content-moderation-system
+# Content Moderation System
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+This project implements a **content moderation pipeline** in **Quarkus**.  
+It processes CSV files with millions of rows, interacts with external **Translation** and **Scoring** services, applies caching for duplicate messages, aggregates results per user, and outputs a CSV report.
 
-If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
+---
 
-## Running the application in dev mode
+## Development mode
 
-You can run your application in dev mode that enables live coding using:
+Run with hot reload and stub endpoints:
 
-```shell script
+```bash
 ./gradlew quarkusDev
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
+Stub endpoints (dev profile only)
+```http request
+GET /dev/translate?q=hello → returns "hello" with latency 50–200ms
+GET /dev/score?q=hola → returns "0.42" with latency 50
+```
+These simulate external services for local development.
+```
+---
+### Input CSV
+```user_id,message
+u1,hello
+u2,hola
+u1,bonjour
+````
+### Output CSV
+```
+user_id,total_messages,avg_score
+u1,2,0.456789
+u2,1,0.876543
+```
+---
+### Running tests
+Run tests with:
+```bash
+./gradlew test
+```
+---
+### Test cases implemented
+Unit tests
+- MessageNormalizerTest: verifies normalization and stable hashing.
+- AggregationServiceTest: verifies per-user totals and average scores. 
+- CsvProcessorOneRowTest: verifies output generation for a single-row CSV.
 
-## Packaging and running the application
+Integration tests (WireMock)
+- LatencyAndCacheIT: simulates Translation/Scoring with 50–200ms latency, checks the pipeline processes messages correctly, and validates that duplicate messages hit the cache (calls ≤2).
+- FailureResilienceIT: simulates a 500 error on /score followed by recovery, checks that the pipeline retries and completes.
+- ---
 
-The application can be packaged using:
+### Performance testing (large datasets)
+You can generate synthetic datasets to validate throughput and caching
 
-```shell script
+- Bash (Linux/macOS)
+```bash
+# 100k rows (~6–8 MB). Increase N for more (e.g. 1000000).
+N=100000
+awk -v N="$N" 'BEGIN{
+  srand();
+  print "user_id,message";
+  phrases[0]="hello"; phrases[1]="hola"; phrases[2]="bonjour";
+  phrases[3]="ciao"; phrases[4]="Hola!!!"; phrases[5]="  hóla   !!! ";
+  for (i=1; i<=N; i++) {
+    u = "u" (i % 100);     # 100 distinct users
+    p = phrases[i % 6];    # deterministic mix with duplicates
+    printf "%s,%s %d\n", u, p, i;
+  }
+}' > input.csv
+
 ./gradlew build
+time java -jar build/quarkus-app/quarkus-run.jar flag-users --in input.csv --out output.csv
+
+head output.csv
 ```
 
-It produces the `quarkus-run.jar` file in the `build/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `build/quarkus-app/lib/` directory.
+- PowerShell (Windows)
+```powershell
+$N = 100000
+"user_id,message" | Out-File -Encoding UTF8 input.csv
+$phrases = @("hello","hola","bonjour","ciao","Hola!!!","  hóla   !!! ")
+1..$N | ForEach-Object {
+  $u = "u$($_ % 100)"
+  $p = $phrases[ $_ % $phrases.Count ]
+  "$u,$p $_" | Add-Content -Encoding UTF8 input.csv
+}
 
-The application is now runnable using `java -jar build/quarkus-app/quarkus-run.jar`.
+./gradlew build
+Measure-Command {
+  java -jar build/quarkus-app/quarkus-run.jar flag-users --in input.csv --out output.csv
+} | Select-Object TotalSeconds
 
-If you want to build an _über-jar_, execute the following command:
+Get-Content output.csv -TotalCount 10
+```
+---
+### Configuration
+application.properties:
+```properties
+processing.concurrency=32
 
-```shell script
-./gradlew build -Dquarkus.package.jar.type=uber-jar
+quarkus.rest-client.translation.url=http://localhost:8080/dev/translate
+quarkus.rest-client.translation.connect-timeout=1000
+quarkus.rest-client.translation.read-timeout=500
+
+quarkus.rest-client.scoring.url=http://localhost:8080/dev/score
+quarkus.rest-client.scoring.connect-timeout=1000
+quarkus.rest-client.scoring.read-timeout=500
+
+quarkus.micrometer.export.prometheus.enabled=true
+quarkus.log.console.json=true
+quarkus.log.category."io.quarkus".level=DEBUG
+```
+---
+### Interactive Logging 🔍
+The system features rich, interactive logging with emojis and detailed progress tracking:
+
+```
+🚀 Starting content moderation pipeline...
+📂 Input file: /path/to/input.csv
+📝 Output file: /path/to/output.csv
+⚡ Concurrency level: 32
+📊 Parsing CSV input file...
+✅ Parsed 8 messages to process
+🔄 Starting async processing of 8 messages...
+
+💬 Processing message from user alice: 'Hello!' -> 'hello!'
+🌍 Translating message for user alice...
+🌐 Cache MISS for translation: 'hello!' - calling external API
+🌍 Translation API response: 'hello!' -> 'hello!'
+🎯 Scoring translated message for user alice...
+🎯 Cache MISS for scoring: 'hello!' - calling external API  
+🎯 Scoring API response: 'hello!' -> 0.900000
+🆕 New user detected: alice
+📈 Updated stats for user alice: 1 messages, avg score: 0.900000
+
+📈 Progress: 8/8 messages processed (100.0%)
+✅ Async processing completed in 668 ms
+🎉 Content moderation pipeline completed successfully!
+📈 Summary: 8 messages processed, 4 unique users, 0 failures
+⏱️ Total execution time: 670 ms
+⚡ Average processing speed: 8.00 messages/second
 ```
 
-The application, packaged as an _über-jar_, is now runnable using `java -jar build/*-runner.jar`.
-
-## Creating a native executable
-
-You can create a native executable using:
-
-```shell script
-./gradlew build -Dquarkus.native.enabled=true
+### Metrics and Monitoring 📈
+Prometheus metrics exposed at: http://localhost:8080/q/metrics
+```plaintext
+(Counters)
+pipeline.messages.processed
+pipeline.messages.failed
+(Cache behavior visible in debug logs)
+💾 Cache HIT/MISS tracking for performance optimization
 ```
+---
+### Summary
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
-
-```shell script
-./gradlew build -Dquarkus.native.enabled=true -Dquarkus.native.container-build=true
-```
-
-You can then execute your native executable with: `./build/content-moderation-system-1.0.0-SNAPSHOT-runner`
-
-If you want to learn more about building native executables, please consult <https://quarkus.io/guides/gradle-tooling>.
-
-## Related Guides
-
-- REST ([guide](https://quarkus.io/guides/rest)): A Jakarta REST implementation utilizing build time processing and Vert.x. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it.
-- REST Client ([guide](https://quarkus.io/guides/rest-client)): Call REST services
-- Picocli ([guide](https://quarkus.io/guides/picocli)): Develop command line applications with Picocli
-- REST Jackson ([guide](https://quarkus.io/guides/rest#json-serialisation)): Jackson serialization support for Quarkus REST. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it
-- SmallRye Fault Tolerance ([guide](https://quarkus.io/guides/smallrye-fault-tolerance)): Build fault-tolerant network services
-- Camel Caffeine Cache ([guide](https://camel.apache.org/camel-quarkus/latest/reference/extensions/caffeine.html)): Perform caching operations using Caffeine Cache
-- RESTEasy Classic ([guide](https://quarkus.io/guides/resteasy)): REST endpoint framework implementing Jakarta REST and more
-- SmallRye Metrics ([guide](https://quarkus.io/guides/smallrye-metrics)): Expose metrics for your services
-
-## Provided Code
-
-### Picocli Example
-
-Hello and goodbye are civilization fundamentals. Let's not forget it with this example picocli application by changing the <code>command</code> and <code>parameters</code>.
-
-[Related guide section...](https://quarkus.io/guides/picocli#command-line-application-with-multiple-commands)
-
-Also for picocli applications the dev mode is supported. When running dev mode, the picocli application is executed and on press of the Enter key, is restarted.
-
-As picocli applications will often require arguments to be passed on the commandline, this is also possible in dev mode via:
-
-```shell script
-./gradlew quarkusDev --quarkus-args='Quarky'
-```
-
-### REST Client
-
-Invoke different services through REST with JSON
-
-[Related guide section...](https://quarkus.io/guides/rest-client)
-
-### REST
-
-Easily start your REST Web Services
-
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
-
-### RESTEasy JAX-RS
-
-Easily start your RESTful Web Services
-
-[Related guide section...](https://quarkus.io/guides/getting-started#the-jax-rs-resources)
+This system demonstrates:
+- CSV streaming for large datasets (millions of rows).
+- Reactive concurrency with back-pressure control.
+- Caching for duplicate messages (bots/spam scenarios).
+- Resilience: timeout, retry, and circuit breaker on external calls.
+- Unit and integration test coverage with WireMock.
+- Metrics and structured logging.
