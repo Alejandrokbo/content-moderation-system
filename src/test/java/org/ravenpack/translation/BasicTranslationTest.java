@@ -1,4 +1,4 @@
-package org.ravenpack;
+package org.ravenpack.translation;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.RestAssured;

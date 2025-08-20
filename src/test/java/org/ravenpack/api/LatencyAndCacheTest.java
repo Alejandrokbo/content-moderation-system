@@ -1,4 +1,4 @@
-package org.ravenpack;
+package org.ravenpack.api;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import io.quarkus.test.junit.QuarkusTest;
@@ -14,7 +14,7 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
-public class LatencyAndCacheIT {
+public class LatencyAndCacheTest {
 
     static WireMockServer wm;
 

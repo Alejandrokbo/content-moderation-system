@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @QuarkusTest
 @QuarkusTestResource(WireMockResource.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class MetricsIT {
+class MetricsTest {
 
     @Inject
     CsvProcessor processor;

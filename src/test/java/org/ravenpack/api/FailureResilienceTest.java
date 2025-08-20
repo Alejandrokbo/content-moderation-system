@@ -1,4 +1,4 @@
-package org.ravenpack.it;
+package org.ravenpack.api;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import io.quarkus.test.junit.QuarkusTest;
@@ -13,7 +13,7 @@ import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
-public class FailureResilienceIT {
+public class FailureResilienceTest {
     static WireMockServer wm;
     @BeforeAll
     static void start() {
