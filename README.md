@@ -15,7 +15,13 @@ Run with hot reload and stub endpoints:
 ./gradlew quarkusDev
 ```
 
-Stub endpoints (dev profile only)
+Dev UI is available at: http://localhost:8080/q/dev/  ````provided by default Quarkus dev mode.````
+
+You can access the REST API at: http://localhost:8080 ``` main page with API links.```
+
+---
+
+## Stub endpoints (dev profile only)
 ```http request
 GET /dev/translate?q=hello → returns "hello" with latency 50–200ms
 GET /dev/score?q=hola → returns "0.42" with latency 50
@@ -57,13 +63,16 @@ Invoke-RestMethod -Uri "http://localhost:8080/api/csv/process" `
 ```
 ---
 ### Input CSV
-```user_id,message
+There is 2 sample CSV files provided in the `root` directory, spanish and english that can be used.
+- example:
+```csv
+user_id,message
 u1,hello
 u2,hola
 u1,bonjour
 ````
 ### Output CSV
-```
+```csv
 user_id,total_messages,avg_score
 u1,2,0.456789
 u2,1,0.876543
@@ -76,17 +85,37 @@ Run tests with:
 ```
 ---
 ### Test cases implemented
-Unit tests
-- MessageNormalizerTest: verifies normalization and stable hashing.
-- AggregationServiceTest: verifies per-user totals and average scores. 
-- CsvProcessorOneRowTest: verifies output generation for a single-row CSV.
 
-Integration tests (WireMock)
-- LatencyAndCacheIT: simulates Translation/Scoring with 50–200ms latency, checks the pipeline processes messages correctly, and validates that duplicate messages hit the cache (calls ≤2).
-- FailureResilienceIT: simulates a 500 error on /score followed by recovery, checks that the pipeline retries and completes.
-- ---
+#### Unit tests
+- **MessageNormalizerTest**: verifies normalization and stable hashing.
+- **AggregationServiceTest**: verifies per-user totals and average scores. 
+- **CsvProcessorOneRowTest**: verifies output generation for a single-row CSV.
+- **SmokeTest**: basic end-to-end pipeline functionality test.
 
-### Performance testing (large datasets)
+#### Integration tests (WireMock)
+- **LatencyAndCacheTest**: simulates Translation/Scoring with 50–200ms latency, checks the pipeline processes messages correctly, and validates that duplicate messages hit the cache (calls ≤2).
+- **FailureResilienceTest**: simulates a 500 error on /score followed by recovery, checks that the pipeline retries and completes.
+
+#### Metrics tests
+- **MetricsTest**: validates Micrometer counter functionality
+  - Tests `pipeline.messages.processed` and `pipeline.messages.failed` counters
+  - Verifies metrics tracking for successful and failed processing
+  - Validates counter accessibility through MeterRegistry
+- **PrometheusMetricsTest**: validates Prometheus metrics endpoint
+  - Tests `/q/metrics` endpoint availability and format
+  - Verifies custom pipeline metrics are exposed in Prometheus format
+  - Validates JVM metrics inclusion
+  - Tests endpoint performance (response time < 1s)
+
+#### Translation tests
+- **BasicTranslationTest**: validates Spanish-to-English translation functionality
+  - Tests basic word translation ("hola" → "hello")
+  - Tests phrase translation ("buenos días" → "good morning")
+  - Tests case preservation (uppercase, title case)
+  - Tests unknown words remain unchanged
+  - Tests complex phrases ("me gusta el gato" → "I like the cat")
+
+## Performance testing (large datasets)
 You can generate synthetic datasets to validate throughput and caching
 
 - Bash (Linux/macOS)
@@ -130,7 +159,112 @@ Measure-Command {
 Get-Content output.csv -TotalCount 10
 ```
 ---
-### Configuration
+
+## Docker Deployment 🐳
+
+The project includes multiple Dockerfiles for different deployment scenarios, all pre-configured and optimized by Quarkus:
+
+### Available Docker Images
+
+#### 1. JVM Mode (Recommended for most cases)
+```bash
+# Build the application
+./gradlew build
+
+# Build Docker image
+docker build -f src/main/docker/Dockerfile.jvm -t content-moderation-system:jvm .
+
+# Run the container
+docker run -i --rm -p 8080:8080 content-moderation-system:jvm
+```
+**Purpose**: Standard JVM deployment with fast startup and good performance. Best for production environments.
+
+#### 2. Native Mode (Ultra-fast startup)
+```bash
+# Build native executable (requires GraalVM or Docker)
+./gradlew build -Dquarkus.native.enabled=true
+
+# Build Docker image
+docker build -f src/main/docker/Dockerfile.native -t content-moderation-system:native .
+
+# Run the container
+docker run -i --rm -p 8080:8080 content-moderation-system:native
+```
+**Purpose**: Near-instant startup (~milliseconds) and lower memory footprint. Ideal for serverless, microservices, and auto-scaling scenarios.
+
+#### 3. Native Micro (Smallest footprint)
+```bash
+# Build native executable
+./gradlew build -Dquarkus.native.enabled=true
+
+# Build micro Docker image
+docker build -f src/main/docker/Dockerfile.native-micro -t content-moderation-system:micro .
+
+# Run the container
+docker run -i --rm -p 8080:8080 content-moderation-system:micro
+```
+**Purpose**: Smallest possible container size. Perfect for edge computing and resource-constrained environments.
+
+#### 4. Legacy JAR (Compatibility)
+```bash
+# Build legacy JAR format
+./gradlew build -Dquarkus.package.jar.type=legacy-jar
+
+# Build Docker image
+docker build -f src/main/docker/Dockerfile.legacy-jar -t content-moderation-system:legacy .
+
+# Run the container
+docker run -i --rm -p 8080:8080 content-moderation-system:legacy
+```
+**Purpose**: Traditional "fat JAR" format for compatibility with older deployment systems.
+
+### Docker Configuration Options
+
+All Docker images support environment variables for configuration:
+
+```bash
+# Example with custom configuration
+docker run -i --rm -p 8080:8080 \
+  -e JAVA_OPTS_APPEND="-Xmx512m" \
+  -e QUARKUS_HTTP_HOST="0.0.0.0" \
+  content-moderation-system:jvm
+```
+
+### Debug Mode in Docker
+```bash
+# Enable remote debugging
+docker run -i --rm -p 8080:8080 -p 5005:5005 \
+  -e JAVA_DEBUG=true \
+  -e JAVA_DEBUG_PORT="*:5005" \
+  content-moderation-system:jvm
+```
+
+### Production Deployment
+For production, use the JVM or native images with:
+- Proper resource limits
+- Health checks
+- Monitoring integration
+- External configuration
+
+```bash
+# Production example with resource limits
+docker run -d \
+  --name content-moderation \
+  -p 8080:8080 \
+  --memory="512m" \
+  --cpus="1.0" \
+  --health-cmd="curl -f http://localhost:8080/q/health || exit 1" \
+  --health-interval=30s \
+  content-moderation-system:jvm
+```
+
+```
+NOTE: The Dockerfiles are automatically generated by Quarkus and optimized for production use. 
+This project does not need manual Dockerfile management. Use the provided Dockerfiles for building and running the application in different modes.
+``` 
+---
+
+## Configuration
 application.properties:
 ```properties
 processing.concurrency=32
@@ -178,7 +312,7 @@ The system features rich, interactive logging with emojis and detailed progress 
 ⚡ Average processing speed: 8.00 messages/second
 ```
 
-### Metrics and Monitoring 📈
+## Metrics and Monitoring 📈
 Prometheus metrics exposed at: http://localhost:8080/q/metrics
 ```plaintext
 (Counters)
@@ -188,7 +322,7 @@ pipeline.messages.failed
 💾 Cache HIT/MISS tracking for performance optimization
 ```
 ---
-### Summary
+## Summary
 
 This system demonstrates:
 - CSV streaming for large datasets (millions of rows).
