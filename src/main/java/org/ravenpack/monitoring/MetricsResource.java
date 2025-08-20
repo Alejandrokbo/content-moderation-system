@@ -15,7 +15,7 @@ public class MetricsResource {
     @Path("/simple")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getSimpleMetrics() {
-        // Métricas básicas del sistema
+        // Basic system metrics
         long totalMemory = Runtime.getRuntime().totalMemory();
         long freeMemory = Runtime.getRuntime().freeMemory();
         long usedMemory = totalMemory - freeMemory;

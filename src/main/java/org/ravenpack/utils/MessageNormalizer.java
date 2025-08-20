@@ -1,4 +1,4 @@
-package org.ravenpack.util;
+package org.ravenpack.utils;
 
 import java.security.MessageDigest;
 import java.text.Normalizer;

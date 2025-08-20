@@ -1,11 +1,10 @@
 package org.ravenpack;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.*;
-import org.ravenpack.util.CsvProcessor;
+import org.ravenpack.utils.CsvProcessor;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

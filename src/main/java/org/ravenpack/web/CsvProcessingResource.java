@@ -5,7 +5,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.jboss.logging.Logger;
-import org.ravenpack.util.CsvProcessor;
+import org.ravenpack.utils.CsvProcessor;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;

@@ -11,8 +11,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 import org.ravenpack.api.ScoringClient;
 import org.ravenpack.config.CacheProvider;
-
-import java.util.concurrent.CompletableFuture;
+import org.ravenpack.utils.MessageNormalizer;
 
 @ApplicationScoped
 public class ScoringService {
@@ -33,8 +32,8 @@ public class ScoringService {
     @Retry(maxRetries = 2, delay = 50)
     @CircuitBreaker(delay = 5000)
     public Uni<Double> score(String text) {
-        String norm = org.ravenpack.util.MessageNormalizer.normalize(text);
-        String key = org.ravenpack.util.MessageNormalizer.hash("s|" + norm);
+        String norm = MessageNormalizer.normalize(text);
+        String key = MessageNormalizer.hash("s|" + norm);
         
         // Check if already cached
         boolean isCached = cache.getIfPresent(key) != null;

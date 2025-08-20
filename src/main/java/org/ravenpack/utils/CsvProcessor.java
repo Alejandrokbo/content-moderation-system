@@ -1,4 +1,4 @@
-package org.ravenpack.util;
+package org.ravenpack.utils;
 
 import com.univocity.parsers.csv.CsvParser;
 import com.univocity.parsers.csv.CsvParserSettings;

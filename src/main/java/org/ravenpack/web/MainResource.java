@@ -17,7 +17,7 @@ public class MainResource {
         return Response.ok("<!DOCTYPE html>" +
                 "<html><head><title>Content Moderation System</title></head>" +
                 "<body><h1>🛡️ Content Moderation System</h1>" +
-                "<p>Sistema funcionando correctamente.</p>" +
+                "<p>System running correctly.</p>" +
                 "<ul>" +
                 "<li><a href='/q/health'>Health Check</a></li>" +
                 "<li><a href='/q/metrics'>Prometheus Metrics</a></li>" +

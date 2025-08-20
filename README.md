@@ -3,6 +3,8 @@
 This project implements a **content moderation pipeline** in **Quarkus**.  
 It processes CSV files with millions of rows, interacts with external **Translation** and **Scoring** services, applies caching for duplicate messages, aggregates results per user, and outputs a CSV report.
 
+The system provides both **REST API** and **programmatic interfaces** for processing CSV files.
+
 ---
 
 ## Development mode
@@ -19,6 +21,39 @@ GET /dev/translate?q=hello → returns "hello" with latency 50–200ms
 GET /dev/score?q=hola → returns "0.42" with latency 50
 ```
 These simulate external services for local development.
+
+## REST API Usage
+
+Once the application is running, you can use the REST API:
+
+```bash
+# Check API health
+curl http://localhost:8080/api/csv/health
+
+# Get sample CSV for testing
+curl http://localhost:8080/api/csv/sample
+
+# Process CSV via HTTP POST
+curl -X POST \
+  -H "Content-Type: text/csv" \
+  --data-binary @input.csv \
+  http://localhost:8080/api/csv/process
+```
+
+**PowerShell equivalent:**
+```powershell
+# Check API health
+Invoke-RestMethod -Uri "http://localhost:8080/api/csv/health" -Method GET
+
+# Get sample CSV
+Invoke-RestMethod -Uri "http://localhost:8080/api/csv/sample" -Method GET
+
+# Process CSV file
+$csv = Get-Content "input.csv" -Raw
+Invoke-RestMethod -Uri "http://localhost:8080/api/csv/process" `
+  -Method POST `
+  -ContentType "text/csv" `
+  -Body $csv
 ```
 ---
 ### Input CSV

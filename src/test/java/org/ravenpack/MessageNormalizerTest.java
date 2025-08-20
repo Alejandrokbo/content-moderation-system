@@ -1,7 +1,7 @@
 package org.ravenpack;
 
 import org.junit.jupiter.api.Test;
-import org.ravenpack.util.MessageNormalizer;
+import org.ravenpack.utils.MessageNormalizer;
 
 import static org.junit.jupiter.api.Assertions.*;
 

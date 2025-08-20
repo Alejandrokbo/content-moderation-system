@@ -11,8 +11,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 import org.ravenpack.api.TranslationClient;
 import org.ravenpack.config.CacheProvider;
-
-import java.util.concurrent.CompletableFuture;
+import org.ravenpack.utils.MessageNormalizer;
 
 @ApplicationScoped
 public class TranslationService {
@@ -33,8 +32,8 @@ public class TranslationService {
     @Retry(maxRetries = 2, delay = 50)
     @CircuitBreaker(requestVolumeThreshold = 20, failureRatio = 0.5, delay = 5000)
     public Uni<String> toEnglish(String text) {
-        String norm = org.ravenpack.util.MessageNormalizer.normalize(text);
-        String key = org.ravenpack.util.MessageNormalizer.hash("t|" + norm);
+        String norm = MessageNormalizer.normalize(text);
+        String key = MessageNormalizer.hash("t|" + norm);
         
         // Check if already cached
         boolean isCached = cache.getIfPresent(key) != null;
