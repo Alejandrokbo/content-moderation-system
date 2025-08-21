@@ -80,7 +80,7 @@ class MetricsTest {
         // If messages were processed successfully, verify output
         if (processedDelta > 0) {
             String output = Files.readString(out);
-            assertTrue(output.contains("user1,2,") || output.contains("user1,1,"), 
+            assertTrue(output.contains("user1;2;") || output.contains("user1;1;"), 
                       "Expected user1 to have processed messages");
         }
 
@@ -120,7 +120,7 @@ class MetricsTest {
         String output = Files.readString(out);
         String[] lines = output.trim().split("\n");
         assertEquals(1, lines.length, "Expected only header line in output");
-        assertEquals("user_id,total_messages,avg_score", lines[0]);
+        assertEquals("user_id;total_messages;avg_score", lines[0]);
 
         // Cleanup
         Files.deleteIfExists(in);

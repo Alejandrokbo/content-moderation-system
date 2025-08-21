@@ -64,7 +64,7 @@ public class LatencyAndCacheTest {
         processor.process(in.toString(), out.toString());
 
         String content = Files.readString(out);
-        assertTrue(content.contains("user_id,total_messages,avg_score"));
+        assertTrue(content.contains("user_id;total_messages;avg_score"));
 
         long trCalls = wm.getAllServeEvents().stream()
                 .filter(e -> e.getRequest().getUrl().startsWith("/translate"))

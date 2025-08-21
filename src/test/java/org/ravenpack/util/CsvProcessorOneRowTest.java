@@ -30,16 +30,16 @@ class CsvProcessorOneRowTest {
 
         String outTxt = Files.readString(out);
 
-        assertTrue(outTxt.startsWith("user_id,total_messages,avg_score"),
+        assertTrue(outTxt.startsWith("user_id;total_messages;avg_score"),
                 "Expected header, got:\n" + outTxt);
         
         // The test should pass if either:
-        // 1. The message was processed successfully (contains "u1,1,")
+        // 1. The message was processed successfully (contains "u1;1;")
         // 2. The message failed due to circuit breaker (only header present)
-        boolean hasSuccessfulOutput = outTxt.contains("u1,1,");
+        boolean hasSuccessfulOutput = outTxt.contains("u1;1;");
         boolean hasOnlyHeader = outTxt.trim().split("\n").length == 1;
         
         assertTrue(hasSuccessfulOutput || hasOnlyHeader,
-                "Expected either successful processing (u1,1,) or circuit breaker failure (header only), got:\n" + outTxt);
+                "Expected either successful processing (u1;1;) or circuit breaker failure (header only), got:\n" + outTxt);
     }
 }

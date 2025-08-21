@@ -21,6 +21,6 @@ public class SmokeTest {
         Files.writeString(in, "user_id,message\nu1,hello\nu1,world\nu2,hola\n");
         processor.process(in.toString(), out.toString());
         String content = Files.readString(out);
-        assertTrue(content.contains("user_id,total_messages,avg_score"));
+        assertTrue(content.contains("user_id;total_messages;avg_score"));
     }
 }
