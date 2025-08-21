@@ -54,6 +54,10 @@ public class CsvProcessor {
         settings.setLineSeparatorDetectionEnabled(true);
         settings.setSkipEmptyLines(true);
         settings.trimValues(true);
+        
+        // Auto-detect separator: try semicolon first (common in European CSVs), then comma
+        settings.setDelimiterDetectionEnabled(true, ',', ';');
+        
         var parser = new CsvParser(settings);
         List<com.univocity.parsers.common.record.Record> records =
                 parser.parseAllRecords(new FileReader(inPath, StandardCharsets.UTF_8));
@@ -126,12 +130,12 @@ public class CsvProcessor {
         
         LOG.infof("📄 Writing results for %d unique users to output file...", uniqueUsers);
         try (var w = new BufferedWriter(new FileWriter(outPath, StandardCharsets.UTF_8))) {
-            w.write("user_id,total_messages,avg_score");
+            w.write("user_id;total_messages;avg_score");
             w.newLine();
             for (OutputData o : snapshot) {
                 LOG.debugf("📝 Writing result: %s -> %d messages, avg score: %.6f", 
                         o.userId(), o.totalMessages(), o.avgScore());
-                w.write(o.userId() + "," + o.totalMessages() + "," +
+                w.write(o.userId() + ";" + o.totalMessages() + ";" +
                         String.format(java.util.Locale.US, "%.6f", o.avgScore()));
                 w.newLine();
             }

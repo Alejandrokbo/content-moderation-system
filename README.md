@@ -32,6 +32,7 @@ These simulate external services for local development.
 
 Once the application is running, you can use the REST API:
 
+**macOS/Linux (curl):**
 ```bash
 # Check API health
 curl http://localhost:8080/api/csv/health
@@ -41,8 +42,8 @@ curl http://localhost:8080/api/csv/sample
 
 # Process CSV via HTTP POST
 curl -X POST \
-  -H "Content-Type: text/csv" \
-  --data-binary @input.csv \
+  -H "Content-Type: text/plain" \
+  --data-binary @sample-messages.csv \
   http://localhost:8080/api/csv/process
 ```
 
@@ -55,7 +56,7 @@ Invoke-RestMethod -Uri "http://localhost:8080/api/csv/health" -Method GET
 Invoke-RestMethod -Uri "http://localhost:8080/api/csv/sample" -Method GET
 
 # Process CSV file
-$csv = Get-Content "input.csv" -Raw
+$csv = Get-Content "sample-messages.csv" -Raw
 Invoke-RestMethod -Uri "http://localhost:8080/api/csv/process" `
   -Method POST `
   -ContentType "text/csv" `
@@ -77,6 +78,14 @@ user_id,total_messages,avg_score
 u1,2,0.456789
 u2,1,0.876543
 ```
+
+**📁 File Storage:**
+When processing CSV files via the REST API, the processed results are automatically saved to the `output/` directory in the project root with the following naming convention:
+- **Format:** `processed-YYYYMMDD-HHMMSS.csv`
+- **Location:** `./output/processed-YYYYMMDD-HHMMSS.csv`
+- **Example:** `./output/processed-20250821-093507.csv`
+
+The API response includes the filename in the `X-Output-File` header for reference.
 ---
 ### Running tests
 Run tests with:
