@@ -276,19 +276,51 @@ This project does not need manual Dockerfile management. Use the provided Docker
 ## Configuration
 application.properties:
 ```properties
-processing.concurrency=32
+# Packaging configuration
+quarkus.package.jar.enabled=true
+quarkus.package.jar.type=fast-jar
+quarkus.native.enabled=false
+
+quarkus.log.console.format=%d{HH:mm:ss} %-5p [%c{2.}] %s%e
 
 quarkus.rest-client.translation.url=http://localhost:8080/dev/translate
+quarkus.rest-client.scoring.url=http://localhost:8080/dev/score
+
+processing.concurrency=32
+cache.maxSize=100000
+cache.expireAfterWrite=300
+
 quarkus.rest-client.translation.connect-timeout=1000
 quarkus.rest-client.translation.read-timeout=500
 
-quarkus.rest-client.scoring.url=http://localhost:8080/dev/score
 quarkus.rest-client.scoring.connect-timeout=1000
 quarkus.rest-client.scoring.read-timeout=500
 
+# Metrics - minimal configuration
+quarkus.micrometer.enabled=true
+quarkus.micrometer.binder.jvm=true
 quarkus.micrometer.export.prometheus.enabled=true
-quarkus.log.console.json=true
-quarkus.log.category."io.quarkus".level=DEBUG
+quarkus.micrometer.export.prometheus.default-registry=true
+
+# Logging simplified configuration
+quarkus.log.level=INFO
+quarkus.log.category."org.ravenpack".level=DEBUG
+quarkus.log.console.enable=true
+
+quarkus.http.port=8080
+
+# Corrected HTTP configuration
+quarkus.http.root-path=/
+quarkus.http.non-application-root-path=/q
+
+# Additional configurations for stability
+quarkus.http.host=0.0.0.0
+quarkus.http.cors=true
+quarkus.http.enable-compression=true
+
+# CDI and Shutdown
+quarkus.shutdown.timeout=10s
+quarkus.arc.remove-unused-beans=false
 ```
 ---
 ### Interactive Logging 🔍
